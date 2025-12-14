@@ -52,4 +52,5 @@ pipeline {
                 bat 'echo "Pipeline Failed!"'
             }
         }
+    }
 }
