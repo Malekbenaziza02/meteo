@@ -34,24 +34,25 @@ pipeline {
             }
         }
         
-        stage('Run Docker Container') {
-            steps {
-                bat 'docker stop my_app_container || echo "no container to stop"'
-                bat 'docker rm my_app_container || echo "no container to remove"'
-                // DÉMARRE LE NOUVEAU CONTENEUR (Correction de l'étape manquante)
-                bat 'docker run -d -p 3000:80 --name my_app_container my_app' 
-            }
-        }
-    } // <--- C'est ICI que le bloc 'stages' doit se terminer.
+      stage('Run Docker Container') {
+    steps {
+        bat '''
+        docker stop my_app_container || echo "no container to stop"
+        docker rm my_app_container || echo "no container to remove"
+        docker run -d -p 3000:80 --name my_app_container my_app
+        '''
+    }
+}
+// <--- C'est ICI que le bloc 'stages' doit se terminer.
 
     // LA SECTION 'POST' DOIT VENIR ICI, AU MÊME NIVEAU QUE 'stages'.
     post {
-        always {
-            bat 'echo "Pipeline Finished"'
-        }
-        failure {
-            // Optionnel : ajouter des notifications en cas d'échec
-            bat 'echo "Pipeline Failed!"'
-        }
+    success {
+        echo "Pipeline SUCCESS ✅"
     }
+    failure {
+        echo "Pipeline FAILED ❌"
+    }
+}
+
 } // <--- C'est ICI que le bloc 'pipeline' se termine.
