@@ -12,11 +12,18 @@ pipeline {
                 // Récupération du code et des tags
                 checkout scm
                 script {
-                    // Récupérer le tag actuel (si présent)
-                    env.GIT_TAG = sh(
-                        script: "git describe --tags --exact-match || echo ''",
-                        returnStdout: true
-                    ).trim()
+                    // Récupérer le tag actuel sans faire échouer le pipeline
+                    try {
+                        def tagResult = bat(
+                            script: '@echo off & git describe --tags --exact-match 2>nul || echo.',
+                            returnStdout: true
+                        ).trim()
+                        env.GIT_TAG = tagResult
+                    } catch (Exception e) {
+                        // Aucun tag trouvé, on met une chaîne vide
+                        env.GIT_TAG = ""
+                    }
+                    echo "Tag détecté : '${env.GIT_TAG}'"
                 }
             }
         }
@@ -25,7 +32,7 @@ pipeline {
             steps {
                 script {
                     if (env.GIT_TAG == env.TAG_NAME) {
-                        echo "Tag ${env.TAG_NAME} trouvé ! On continue le pipeline."
+                        echo "Tag ${env.TAG_NAME} trouvé ! Le pipeline continue."
                     } else if (env.GIT_TAG == "") {
                         echo "Pas de tag sur ce commit. Le pipeline s'arrête ici."
                         currentBuild.result = 'SUCCESS'
@@ -45,7 +52,9 @@ pipeline {
             }
             steps {
                 echo 'Construction du projet...'
-                // Ici, ajoute tes commandes de build, ex: sh 'npm install && npm run build'
+                // Commandes Windows pour le build, par exemple :
+                // bat 'npm install'
+                // bat 'npm run build'
             }
         }
 
@@ -55,7 +64,8 @@ pipeline {
             }
             steps {
                 echo 'Déploiement du projet...'
-                // Ici, ajoute tes commandes de déploiement
+                // Commandes Windows pour le déploiement, par exemple :
+                // bat 'copy dist\\* C:\\serveur\\projet\\'
             }
         }
     }
