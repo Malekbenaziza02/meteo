@@ -28,21 +28,22 @@ pipeline {
         }
         
         stage('Docker Build') {
-            steps {
-                // Construit l'image et la tagge comme 'my_app'
-                bat 'docker build -t my_app .'
-            }
-        }
+    steps {
+        bat 'docker build -t meteo_image .'
+    }
+}
+
         
-      stage('Run Docker Container') {
+ stage('Run Docker Container') {
     steps {
         bat '''
-        docker stop my_app_container || echo "no container to stop"
-        docker rm my_app_container || echo "no container to remove"
-        docker run -d -p 3000:80 --name my_app_container my_app
+        docker stop meteo_container || echo "no container to stop"
+        docker rm meteo_container || echo "no container to remove"
+        docker run -d -p 3000:80 --name meteo_container meteo_image
         '''
     }
 }
+
 // <--- C'est ICI que le bloc 'stages' doit se terminer.
 
     // LA SECTION 'POST' DOIT VENIR ICI, AU MÊME NIVEAU QUE 'stages'.
@@ -54,5 +55,6 @@ pipeline {
         echo "Pipeline FAILED ❌"
     }
 }
+
 
 } // <--- C'est ICI que le bloc 'pipeline' se termine.
