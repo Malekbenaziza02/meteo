@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+
+    environment {
+        // Tag à tester
+        TAG_NAME = "v1.0.0"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Récupération du code et des tags
+                checkout scm
+                script {
+                    // Récupérer le tag actuel (si présent)
+                    env.GIT_TAG = sh(
+                        script: "git describe --tags --exact-match || echo ''",
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+
+        stage('Test Tag') {
+            steps {
+                script {
+                    if (env.GIT_TAG == env.TAG_NAME) {
+                        echo "Tag ${env.TAG_NAME} trouvé ! On continue le pipeline."
+                    } else if (env.GIT_TAG == "") {
+                        echo "Pas de tag sur ce commit. Le pipeline s'arrête ici."
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    } else {
+                        echo "Tag trouvé (${env.GIT_TAG}) mais ce n'est pas ${env.TAG_NAME}. Le pipeline s'arrête ici."
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+            when {
+                expression { env.GIT_TAG == env.TAG_NAME }
+            }
+            steps {
+                echo 'Construction du projet...'
+                // Ici, ajoute tes commandes de build, ex: sh 'npm install && npm run build'
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression { env.GIT_TAG == env.TAG_NAME }
+            }
+            steps {
+                echo 'Déploiement du projet...'
+                // Ici, ajoute tes commandes de déploiement
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Fin du pipeline."
+        }
+    }
+}
