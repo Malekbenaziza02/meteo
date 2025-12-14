@@ -18,40 +18,41 @@ pipeline {
         
         stage('Build React App') {
             environment {
-                // CI="false" est souvent nécessaire pour éviter que des outils comme Create React App 
-                // ne traitent les avertissements comme des erreurs en mode CI.
-                CI = "false" 
+                CI = "false" // Pour éviter que Create React App traite les avertissements comme erreurs
             }
             steps {
                 bat 'npm run build'
+
+                // ⚡ Archiver le build React comme artefact
+                archiveArtifacts artifacts: 'build/**', fingerprint: true
             }
         }
         
         stage('Docker Build') {
             steps {
-                // Construit l'image et la tagge comme 'my_app'
+                // Construit l'image Docker et la tagge 'my_app'
                 bat 'docker build -t my_app .'
             }
         }
         
         stage('Run Docker Container') {
             steps {
+                // Arrêter et supprimer l'ancien conteneur si nécessaire
                 bat 'docker stop my_app_container || echo "no container to stop"'
                 bat 'docker rm my_app_container || echo "no container to remove"'
-                // DÉMARRE LE NOUVEAU CONTENEUR (Correction de l'étape manquante)
+
+                // Démarrer le nouveau conteneur
                 bat 'docker run -d -p 3000:80 --name my_app_container my_app' 
             }
         }
-    } // <--- C'est ICI que le bloc 'stages' doit se terminer.
+    } // Fin des stages
 
-    // LA SECTION 'POST' DOIT VENIR ICI, AU MÊME NIVEAU QUE 'stages'.
     post {
         always {
             bat 'echo "Pipeline Finished"'
         }
         failure {
-            // Optionnel : ajouter des notifications en cas d'échec
             bat 'echo "Pipeline Failed!"'
         }
     }
-} // <--- C'est ICI que le bloc 'pipeline' se termine.
+}
