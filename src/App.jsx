@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './index.css';
 
+//tester pour dev
 function App() {
   const [weather, setWeather] = useState({
     city: 'Paris',
